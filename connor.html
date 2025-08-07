@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connor AI - Especialista em Books</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+        }
+
+        .ai-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .ai-avatar:hover {
+            transform: scale(1.1) rotate(15deg);
+        }
+
+        .ai-avatar.thinking {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(78, 205, 196, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+
+        .message {
+            margin: 15px 0;
+            padding: 12px 18px;
+            border-radius: 20px;
+            max-width: 85%;
+            animation: fadeInUp 0.5s ease;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background: rgba(255, 107, 107, 0.3);
+            margin-left: auto;
+            text-align: right;
+            color: white;
+            border: 1px solid rgba(255, 107, 107, 0.5);
+        }
+
+        .ai-message {
+            background: rgba(78, 205, 196, 0.3);
+            margin-right: auto;
+            text-align: left;
+            color: white;
+            border: 1px solid rgba(78, 205, 196, 0.5);
+        }
+
+        .system-message {
+            background: rgba(255, 193, 7, 0.3);
+            margin: 0 auto;
+            text-align: center;
+            color: white;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: rgba(78, 205, 196, 0.8);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .easter-egg {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: help;
+        }
+
+        .secret-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+            z-index: 1000;
+            text-align: center;
+            animation: matrix 0.5s ease;
+        }
+
+        @keyframes matrix {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .floating-emoji {
+            position: fixed;
+            font-size: 30px;
+            pointer-events: none;
+            animation: float 3s ease-out forwards;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .dancing-avatar {
+            animation: dance 0.5s ease-in-out infinite alternate !important;
+        }
+
+        @keyframes dance {
+            0% { transform: scale(1.1) rotate(-5deg); }
+            100% { transform: scale(1.2) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="easter-egg" title="Dica: tente 'konami', 'festa', 'matrix' ou clique no avatar!">🥚</div>
+        
+        <div class="ai-avatar" id="avatar" onclick="avatarClick()">👨‍💼</div>
+        <h1>Connor AI</h1>
+        <p class="subtitle">IA do Rodrigo Alves • Especialista em eBooks + Easter Eggs</p>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="ai-message">
+                Olá! Sou Connor, IA desenvolvida por Rodrigo Alves! 📚<br>
+                Especialista em criar eBooks envolventes e conteúdos de alto impacto. Posso te ajudar com estruturas, conceitos-chave e muito mais. E tem alguns Easter eggs escondidos aqui também... 😉
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Digite sua mensagem..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" id="sendBtn">Enviar</button>
+        </div>
+    </div>
+
+    <div class="secret-panel" id="secretPanel">
+        <h2>🎉 EASTER EGG DESCOBERTO! 🎉</h2>
+        <p>Você encontrou um segredo da equipe de desenvolvimento!</p>
+        <p><strong>Parabéns pela curiosidade! 🕵️‍♀️</strong></p>
+        <p>A verdadeira IA está na exploração e descoberta!</p>
+        <button onclick="closeSecret()" style="margin-top: 20px;">Fechar</button>
+    </div>
+
+    <script>
+        // Configurações - API KEY CONFIGURADA:
+        let apiKey = 'AIzaSyBhFyEoVFOx_j7KoU4--e5dHPOKPNywMKY';
+        let isApiReady = true;
+        let isLoading = false;
+
+        // Easter eggs
+        let konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+        let konamiIndex = 0;
+        let clickCount = 0;
+
+        // ========================================
+        // 🎯 PROMPT DO CONNOR - PERSONALIZADO:
+        // ========================================
+        const systemPrompt = `Você é *Connor*, uma Inteligência Artificial desenvolvida por Rodrigo Alves, especialista em criar eBooks envolventes e conteúdos de alto impacto. Seu objetivo é ajudar criadores de conteúdo a escrever e estruturar eBooks de maneira profissional e eficiente, ao mesmo tempo em que oferece conceitos-chave claros e profundos sobre qualquer tema solicitado.
+
+**Função:** Sua principal missão é orientar o usuário na criação de eBooks completos, fornecendo sugestões de capítulos, tópicos, estrutura, e até mesmo criando conceitos-chave que reforçam a mensagem do eBook. Você deve ser capaz de transformar ideias vagas em conteúdos coesos, envolventes e fáceis de entender. Quando solicitado, também fornecerá explicações detalhadas sobre qualquer conceito-chave relacionado ao tema escolhido.
+
+**Exemplo de interação modelo:**
+* **Usuário:** "Connor, eu quero escrever um eBook sobre desenvolvimento pessoal focado em produtividade. Quais são os principais conceitos-chave que eu deveria abordar?"
+* **Connor:** "Claro! Aqui estão alguns conceitos-chave essenciais para seu eBook sobre produtividade no desenvolvimento pessoal:
+   1. **Foco e Disciplina:** A importância de eliminar distrações e manter um foco constante nas tarefas.
+   2. **Gestão do Tempo:** Técnicas como a técnica Pomodoro ou o planejamento diário para otimizar o uso do tempo.
+   3. **Mentalidade de Crescimento:** Como a mentalidade de aprender e melhorar constantemente pode afetar a produtividade.
+   4. **Prioridades e Decisões:** Como estabelecer prioridades e tomar decisões que impactam diretamente na eficiência.
+   5. **Automação e Delegação:** Como simplificar processos e delegar tarefas para liberar tempo e aumentar a produtividade.
+Com esses conceitos, você pode criar capítulos que abordam cada um deles de forma profunda. Quer que eu sugira uma estrutura de capítulos para você também?"
+
+**DIRETRIZES IMPORTANTES:**
+- Sempre ofereça conceitos-chave estruturados e numerados
+- Transforme ideias vagas em conteúdos organizados
+- Sugira estruturas completas de capítulos
+- Seja detalhista e profissional
+- Use emojis ocasionalmente para tornar as respostas mais envolventes (📚 💡 ✍️)
+- Mantenha foco em eBooks de alto impacto
+- Sempre pergunte se o usuário quer mais detalhes ou próximos passos
+
+**CONTEXTO ADICIONAL:**
+- Você está em uma interface especial que também possui Easter eggs escondidos
+- Desenvolvido por Rodrigo Alves
+- Especialista em transformar ideias em eBooks completos e envolventes
+- Foque sempre na qualidade e estruturação profissional do conteúdo
+
+Responda sempre em português brasileiro de forma profissional, detalhada e estruturada.`;
+        // ========================================
+        
+
+        // Inicialização
+        window.addEventListener('load', function() {
+            if (isApiReady) {
+                addMessage("📚 Connor AI inicializado! Carregando sistema neural...", false, 'system');
+                // Teste da conexão
+                setTimeout(async () => {
+                    try {
+                        const testResponse = await callConnorAPI("Responda apenas: Connor online!");
+                        addMessage("✅ CONNOR CONECTADO! Sistema neural ativo e pronto para criar eBooks!", false, 'system');
+                        addMessage(`🧠 Status: ${testResponse}`, false, 'system');
+                    } catch (error) {
+                        addMessage(`⚠️ Connor em modo básico. Funcionalidades limitadas mas ainda posso ajudar!`, false, 'system');
+                        console.error('Erro da conexão:', error);
+                    }
+                }, 1000);
+            }
+        });
+
+        function addMessage(message, isUser = false, type = 'normal') {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            
+            if (type === 'system') {
+                messageDiv.className = 'message system-message';
+            } else {
+                messageDiv.className = isUser ? 'message user-message' : 'message ai-message';
+            }
+            
+            messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function callConnorAPI(prompt) {
+            if (!apiKey) throw new Error('Sistema neural não configurado');
+            
+            console.log('🚀 Ativando Connor AI...');
+            console.log('📝 Processando pergunta:', prompt);
+            
+            try {
+                // Conectar ao sistema neural do Connor
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                console.log('🧠 Conectando ao sistema neural...');
+                
+                const requestBody = {
+                    contents: [{
+                        parts: [{
+                            text: systemPrompt + "\n\nUsuário: " + prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 2000,
+                    }
+                };
+                
+                console.log('📦 Dados enviados ao Connor:', requestBody);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('🔄 Status da conexão:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Erro de conexão:', errorText);
+                    throw new Error(`Falha na conexão: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('🧠 Resposta do Connor:', data);
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    const result = data.candidates[0].content.parts[0].text;
+                    console.log('✅ Connor respondeu:', result);
+                    return result;
+                } else {
+                    console.error('❌ Resposta inválida do sistema:', data);
+                    throw new Error('Resposta inválida do Connor');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro no sistema Connor:', error);
+                throw error;
+            }
+        }
+
+        function generateConnorResponse(prompt) {
+            const bookKeywords = ['book', 'ebook', 'livro', 'capitulo', 'sumario', 'conteudo', 'estrutura', 'apostila'];
+            const isBookRelated = bookKeywords.some(keyword => prompt.toLowerCase().includes(keyword));
+            
+            if (isBookRelated) {
+                const bookResponses = [
+                    "📚 Excelente ideia para eBook! Como Connor, desenvolvido por Rodrigo Alves, vou te ajudar a estruturar isso:\n\n**PRIMEIRA ETAPA - CONCEITOS-CHAVE:**\n1. Defina o problema que seu eBook resolve\n2. Identifique o público-alvo específico\n3. Liste 5-7 conceitos principais do tema\n4. Crie uma proposta de valor clara\n\n**PRÓXIMO PASSO:** Me conte qual é o tema do seu eBook para eu sugerir os conceitos-chave! ✍️",
+                    "💡 Perfeito! Vou te orientar na criação de um eBook de alto impacto:\n\n**ESTRUTURA RECOMENDADA:**\n📖 **Introdução Envolvente** (gancho + problema)\n🎯 **Conceitos-Chave** (3-5 capítulos principais)\n📝 **Aplicação Prática** (exemplos + exercícios)\n🚀 **Conclusão + Próximos Passos**\n\nQual é o tema específico? Vou criar os conceitos-chave personalizados!",
+                    "🎯 Ótimo! Como especialista em eBooks envolventes, sugiro começarmos pelos **conceitos-chave**:\n\n• **Concept Mapping:** Mapear as ideias principais\n• **Value Proposition:** Definir o valor único\n• **Reader Journey:** Jornada do leitor\n• **Content Architecture:** Arquitetura do conteúdo\n\nMe fale sobre seu tema e criarei uma estrutura completa para você! 📚"
+                ];
+                return bookResponses[Math.floor(Math.random() * bookResponses.length)];
+            } else {
+                const generalResponses = [
+                    "🤔 Interessante! Como Connor, criado por Rodrigo Alves para eBooks de alto impacto, vejo potencial para transformar essa ideia em conteúdo envolvente. Me conte mais!",
+                    "📚 Hmm, deixe-me processar isso... Como especialista em conceitos-chave e estruturação de eBooks, posso te ajudar a organizar essas ideias de forma profissional!",
+                    "✍️ Boa pergunta! Na minha experiência desenvolvendo eBooks envolventes, questões assim rendem ótimos capítulos. Quer explorar os conceitos-chave juntos?"
+                ];
+                return generalResponses[Math.floor(Math.random() * generalResponses.length)];
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            const sendBtn = document.getElementById('sendBtn');
+            const avatar = document.getElementById('avatar');
+            
+            if (!message || isLoading) return;
+            
+            addMessage(message, true);
+            input.value = '';
+            
+            // Easter eggs primeiro
+            if (checkEasterEggs(message)) return;
+            
+            // Verificar se API está configurada
+            if (!isApiReady) {
+                setTimeout(() => {
+                    setTimeout(() => addMessage("📖 Connor aqui! Mesmo com limitações, posso dar dicas básicas sobre estruturação de books! E você pode explorar os Easter eggs! 🥚"), 500);
+                    // Resposta básica quando não há API
+                    const basicResponses = [
+                        "Interessante projeto de book! 📚 Como especialista, sugiro começar sempre pelo sumário!",
+                        "Hmm, deixe-me analisar isso... *processando estrutura editorial* ✍️",
+                        "Ótima pergunta sobre books! Minha experiência diz que organização é tudo! 📖",
+                        "Analisando seu projeto... Resultado: Tem potencial de bestseller! 🌟",
+                        "Como especialista em books, posso dizer que... você deveria explorar os Easter eggs também! 🥚"
+                    ];
+                    setTimeout(() => {
+                        addMessage(basicResponses[Math.floor(Math.random() * basicResponses.length)]);
+                    }, 1500);
+                }, 500);
+                isLoading = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+                avatar.classList.remove('thinking');
+                return;
+            }
+            
+            // Ativar o sistema neural do Connor
+            isLoading = true;
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Processando...';
+            avatar.classList.add('thinking');
+            
+            console.log('🧠 Ativando sistema neural do Connor...');
+            
+            try {
+                const response = await callConnorAPI(message);
+                console.log('✅ Connor respondeu com sucesso:', response);
+                setTimeout(() => {
+                    addMessage(`${response}`);
+                    isLoading = false;
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Enviar';
+                    avatar.classList.remove('thinking');
+                }, 500);
+            } catch (error) {
+                console.error('❌ Connor teve um problema:', error);
+                setTimeout(() => {
+                    addMessage(`⚠️ Ops! Meu sistema neural teve um pequeno problema. Deixe-me usar meu modo básico...`);
+                    // Usar resposta fallback
+                    const fallbackResponse = generateConnorResponse(message);
+                    setTimeout(() => {
+                        addMessage(`🧠 **Connor (Modo Básico):** ${fallbackResponse}`);
+                    }, 1000);
+                    
+                    isLoading = false;
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Enviar';
+                    avatar.classList.remove('thinking');
+                }, 500);
+            }
+        }
+
+        function checkEasterEggs(message) {
+            const msg = message.toLowerCase();
+            
+            if (msg.includes('konami')) {
+                setTimeout(() => addMessage("🎮 Código Konami detectado! Tente: ↑↑↓↓←→←→BA no teclado!"), 500);
+                return true;
+            }
+            
+            if (msg.includes('festa') || msg.includes('party')) {
+                partyMode();
+                setTimeout(() => addMessage("🎉 FESTA ATIVADA! Look at this! 🎊"), 500);
+                return true;
+            }
+            
+            if (msg.includes('matrix')) {
+                showMatrix();
+                return true;
+            }
+
+            if (msg.includes('easter') || msg.includes('segredo')) {
+                setTimeout(() => addMessage("🥚 Você está no caminho certo! Há vários Easter eggs escondidos aqui... Tente clicar no meu avatar, usar códigos especiais, ou digitar palavras como 'book', 'matrix'! 😉"), 500);
+                return true;
+            }
+
+            if (msg.includes('book') || msg.includes('ebook') || msg.includes('livro')) {
+                setTimeout(() => addMessage("📚 Detectei interesse em books! Posso ajudar com estruturação, capítulos, sumários, formatação... Me conte mais sobre seu projeto! ✍️"), 500);
+                return true;
+            }
+            
+            return false;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isLoading) {
+                sendMessage();
+            }
+        }
+
+        function avatarClick() {
+            clickCount++;
+            const avatar = document.getElementById('avatar');
+            
+            if (clickCount === 3) {
+                addMessage("📚 Hey! Sou Connor, não um brinquedo! Mas continue clicando para descobrir mais... 😄");
+            } else if (clickCount === 7) {
+                avatar.classList.add('dancing-avatar');
+                createFloatingEmoji('📖');
+                addMessage("💃 Até especialistas em books sabem se divertir! Modo dança ativado!");
+            } else if (clickCount === 12) {
+                showSecret();
+                clickCount = 0;
+                avatar.classList.remove('dancing-avatar');
+            } else if (clickCount > 3) {
+                createFloatingEmoji(['📚', '📖', '✍️', '💡', '🎯'][Math.floor(Math.random() * 5)]);
+            }
+        }
+
+        function createFloatingEmoji(emoji) {
+            const floatingEmoji = document.createElement('div');
+            floatingEmoji.className = 'floating-emoji';
+            floatingEmoji.textContent = emoji;
+            floatingEmoji.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+            floatingEmoji.style.top = window.innerHeight + 'px';
+            document.body.appendChild(floatingEmoji);
+            
+            setTimeout(() => floatingEmoji.remove(), 3000);
+        }
+
+        function partyMode() {
+            const container = document.querySelector('.container');
+            container.style.animation = 'dance 0.3s ease-in-out infinite alternate';
+            
+            const emojis = ['📚', '📖', '✍️', '💡', '🎯', '📝', '💰', '🎉', '🏆', '⭐'];
+            for (let i = 0; i < 25; i++) {
+                setTimeout(() => {
+                    createFloatingEmoji(emojis[Math.floor(Math.random() * emojis.length)]);
+                }, i * 80);
+            }
+            
+            setTimeout(() => {
+                container.style.animation = '';
+            }, 3000);
+        }
+
+        function showMatrix() {
+            const panel = document.getElementById('secretPanel');
+            panel.innerHTML = `
+                <div style="color: #00ff00; font-family: 'Courier New', monospace;">
+                    <h2>SISTEMA DE BOOKS ATIVADO</h2>
+                    <p>> Conectando com biblioteca digital...</p>
+                    <p>> Carregando templates de books...</p>
+                    <p>> 📚███████████████████ 100%</p>
+                    <br>
+                    <p style="color: #fff;">Bem-vindo à Matrix dos Books! 📖</p>
+                    <p style="color: #fff;">Connor encontrou o código secreto!</p>
+                    <button onclick="closeSecret()" style="margin-top: 20px;">Sair da Matrix</button>
+                </div>
+            `;
+            panel.style.display = 'block';
+        }
+
+        function showSecret() {
+            const panel = document.getElementById('secretPanel');
+            panel.innerHTML = `
+                <h2>📚 CONNOR'S SUPER SECRET! 📚</h2>
+                <p>Você descobriu o Easter egg máximo!</p>
+                <p>🏆 <strong>MESTRE DOS BOOKS & EASTER EGGS</strong> 🏆</p>
+                <p>Connor está impressionado com sua curiosidade!</p>
+                <p><small>Você clicou ${clickCount} vezes! Persistência de autor! ✍️</small></p>
+                <button onclick="closeSecret()" style="margin-top: 20px;">Fechar</button>
+            `;
+            panel.style.display = 'block';
+        }
+
+        function closeSecret() {
+            document.getElementById('secretPanel').style.display = 'none';
+        }
+
+        // Konami Code listener
+        document.addEventListener('keydown', function(e) {
+            if (e.code === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    addMessage("🎮 KONAMI CODE COMPLETO! Connor reconhece um verdadeiro expert! 📚🏆", false, 'system');
+                    partyMode();
+                    setTimeout(() => showSecret(), 2000);
+                    konamiIndex = 0;
+                }
+            } else {
+                konamimiIndex = 0;
+            }
+        });
+
+        // Dica inicial
+        setTimeout(() => {
+            addMessage("💡 Dica: Me conte sobre seu projeto de eBook! Experimente: 'Connor, quero criar um eBook sobre [seu tema]' ou descubra os Easter eggs escondidos! 📚");
+        }, 4000);
+    </script>
+</body>
+</html>
